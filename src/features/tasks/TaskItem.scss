@@ -1,13 +1,16 @@
 $transition-duration: 750ms;
 
+/* 🔹 Sanftes Ein- und Ausblenden für neue/gelöschte Aufgaben */
 @keyframes fadeOut {
   100% {
     opacity: 0;
     max-height: 0;
+    transform: translateY(-4px);
   }
   0% {
     opacity: 1;
     max-height: 25px;
+    transform: translateY(0);
   }
 }
 
@@ -15,21 +18,66 @@ $transition-duration: 750ms;
   0% {
     opacity: 0;
     max-height: 0;
+    transform: translateY(4px);
   }
   100% {
     opacity: 1;
     max-height: 25px;
+    transform: translateY(0);
   }
 }
 
 .task-item.fade-out {
   animation: fadeOut ease $transition-duration;
-  animation-delay: $transition-duration;
   animation-fill-mode: forwards;
 }
 
 .task-item.fade-in {
   animation: fadeIn ease $transition-duration;
-  animation-delay: 0s;
   animation-fill-mode: forwards;
+}
+
+/* 🔸 Cross-out Effekt (falls TextArea-Klasse das nutzt) */
+.cross-out {
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
+  text-decoration-color: #b366ff; /* kräftiges Lila */
+  color: #b366ff !important;
+  transition: color 0.3s ease, text-decoration-color 0.3s ease;
+}
+
+/* Rückkehr zum normalen Text */
+.no-text-decoration {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* 🔮 Pulse-Effekt beim Abhaken (Fallback für ältere Browser ohne accent-color) */
+@keyframes purplePulse {
+  0% {
+    transform: scale(0.7);
+    opacity: 0.9;
+    box-shadow: 0 0 0 0 rgba(179, 102, 255, 0.4);
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+    box-shadow: 0 0 0 10px rgba(179, 102, 255, 0);
+  }
+}
+
+.checkbox-pulse {
+  animation: purplePulse 0.4s ease-out;
+}
+
+/* 🕶️ Dark Mode Optimierungen */
+[data-theme='dark'] .task-item {
+  background: transparent;
+  border-color: #333;
+  color: #f5f5f5;
+}
+
+[data-theme='dark'] textarea.text-area-input {
+  background: transparent;
+  color: #f5f5f5;
 }

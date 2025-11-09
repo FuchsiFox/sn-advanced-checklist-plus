@@ -5,18 +5,46 @@ import styled from 'styled-components'
 import { useAppDispatch, useAppSelector } from '../../app/hooks'
 import { GroupPayload, taskAdded, tasksGroupDraft } from './tasks-slice'
 
-import { TextInput } from '../../common/components'
-import { DottedCircleIcon } from '../../common/components/icons'
 import { isLastActiveGroup } from '../../common/utils'
 
 const Container = styled.div`
-  align-items: center;
   display: flex;
-  margin-bottom: 8px;
+  align-items: center;
+  margin-bottom: 10px;
+  width: 100%;
+`
 
-  & > *:first-child {
-    margin-left: 1px;
-    margin-right: 9px;
+/* Volle Breite + Theme per data-theme */
+const StyledInput = styled.input`
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  border: 1px solid var(--sn-stylekit-border-color);
+  color: var(--sn-stylekit-foreground-color);
+  background: #ffffff; /* Default: Light */
+
+  /* Light explizit hell */
+  :root[data-theme='light'] & {
+    background: #ffffff;
+  }
+
+  /* Dark deutlich dunkel */
+  :root[data-theme='dark'] & {
+    background: var(--sn-stylekit-contrast-background-color);
+  }
+
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  &:focus {
+    border-color: #b486f9;
+    box-shadow: 0 0 6px rgba(180, 134, 249, 0.6);
+  }
+
+  &::placeholder {
+    color: rgba(127, 127, 127, 0.9);
   }
 `
 
@@ -26,7 +54,6 @@ type CreateTaskProps = {
 
 const CreateTask: React.FC<CreateTaskProps> = ({ group }) => {
   const inputRef = createRef<HTMLInputElement>()
-
   const dispatch = useAppDispatch()
 
   const spellCheckerEnabled = useAppSelector(
@@ -46,10 +73,8 @@ const CreateTask: React.FC<CreateTaskProps> = ({ group }) => {
 
   function handleKeyPress(event: KeyboardEvent<HTMLInputElement>) {
     if (event.key === 'Enter') {
-      const rawString = (event.target as HTMLInputElement).value
-      if (rawString.length === 0) {
-        return
-      }
+      const rawString = (event.target as HTMLInputElement).value.trim()
+      if (!rawString) return
 
       dispatch(
         taskAdded({ task: { id: uuidv4(), description: rawString }, groupName })
@@ -58,25 +83,19 @@ const CreateTask: React.FC<CreateTaskProps> = ({ group }) => {
     }
   }
 
-  if (!canEdit) {
-    return <></>
-  }
+  if (!canEdit) return null
 
   const isLastActive = isLastActiveGroup(allGroups, groupName)
 
   return (
     <Container>
-      <DottedCircleIcon />
-      <TextInput
-        testId="create-task-input"
-        disabled={!canEdit}
-        enterKeyHint={'go'}
+      <StyledInput
+        ref={inputRef}
+        value={taskDraft}
         onChange={onTextChange}
         onKeyPress={handleKeyPress}
-        placeholder={'Type a task and press enter'}
-        ref={inputRef}
+        placeholder="enter new task..."
         spellCheck={spellCheckerEnabled}
-        value={taskDraft}
         autoFocus={isLastActive}
       />
     </Container>

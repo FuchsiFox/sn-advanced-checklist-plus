@@ -1,13 +1,74 @@
+/* === THEME VARIABLES === */
+
+/* 🌞 Light Mode */
+:root {
+  --sn-stylekit-background-color: #ffffff;
+  --sn-stylekit-foreground-color: #222222;
+  --sn-stylekit-border-color: #dddddd;
+  --sn-stylekit-info-color: #007aff;
+  --sn-stylekit-success-color: #28a745;
+  --sn-stylekit-warning-color: #ff9500;
+  --sn-stylekit-danger-color: #ff3b30;
+  --task-priority-low: #4cd964;
+  --task-priority-medium: #ffcc00;
+  --task-priority-high: #ff3b30;
+  --task-accent-purple: #b388ff; /* kräftiges Lila */
+}
+
+/* 🌙 Dark Mode (System) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --sn-stylekit-background-color: #1c1c1e;
+    --sn-stylekit-foreground-color: #f2f2f7;
+    --sn-stylekit-border-color: #2c2c2e;
+    --sn-stylekit-info-color: #0a84ff;
+    --sn-stylekit-success-color: #30d158;
+    --sn-stylekit-warning-color: #ff9f0a;
+    --sn-stylekit-danger-color: #ff453a;
+    --task-priority-low: #30d158;
+    --task-priority-medium: #ff9f0a;
+    --task-priority-high: #ff453a;
+  }
+}
+
+/* 🌙 Manueller Override per Toggle (hat Vorrang vor System) */
+[data-theme='dark'] {
+  --sn-stylekit-background-color: #181818; /* ruhigeres, dunkleres Grundgrau */
+  --sn-stylekit-foreground-color: #f5f5f5;
+  --sn-stylekit-border-color: #2e2e2e;
+  --sn-stylekit-info-color: #9cdcfe;
+  --sn-stylekit-success-color: #30d158;
+  --sn-stylekit-warning-color: #ff9f0a;
+  --sn-stylekit-danger-color: #ff453a;
+  --task-priority-low: #30d158;
+  --task-priority-medium: #ff9f0a;
+  --task-priority-high: #ff453a;
+}
+
+[data-theme='light'] {
+  --sn-stylekit-background-color: #ffffff;
+  --sn-stylekit-foreground-color: #222222;
+  --sn-stylekit-border-color: #dddddd;
+}
+
+/* Basis-Styling */
+body {
+  background-color: var(--sn-stylekit-background-color);
+  color: var(--sn-stylekit-foreground-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Stylekit import */
 @import '~@standardnotes/stylekit/dist/stylekit.css';
 
 body,
 html {
-  background-color: var(--sn-stylekit-secondary-background-color);
+  background-color: var(--sn-stylekit-background-color);
   padding: 0 !important;
 }
 
 * {
-  // To prevent gray flash when focusing input on mobile Safari
+  /* Verhindert graues Flash in Mobile Safari */
   -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
   font-family: var(--sn-stylekit-sans-serif-font);
 }
@@ -15,57 +76,46 @@ html {
 .sn-component {
   display: flex;
   flex-direction: column;
+  background: var(--sn-stylekit-background-color);
+  color: var(--sn-stylekit-foreground-color);
 
   @media screen and (max-width: 420px) {
     min-height: -webkit-fill-available;
   }
 
-  .ml-3 {
-    margin-left: 0.75rem;
-  }
-
-  .mr-3 {
-    margin-right: 0.75rem;
-  }
+  .ml-3 { margin-left: 0.75rem; }
+  .mr-3 { margin-right: 0.75rem; }
 
   .sn-icon.sm {
     height: 0.875rem;
     width: 0.875rem;
   }
 
-  .no-fill {
-    fill: none;
-  }
-
-  .stroke-info-color {
-    stroke: var(--sn-stylekit-info-color);
-  }
-
-  .stroke-neutral-color {
-    stroke: var(--sn-stylekit-neutral-color);
-  }
-
-  .fill-info-color {
-    fill: var(--sn-stylekit-info-color);
-  }
+  .no-fill { fill: none; }
+  .stroke-info-color { stroke: var(--sn-stylekit-info-color); }
+  .stroke-neutral-color { stroke: var(--sn-stylekit-neutral-color); }
+  .fill-info-color { fill: var(--sn-stylekit-info-color); }
 
   .sn-icon-button {
     border-width: 0;
-
+    background: transparent;
+    box-shadow: none;
+    /* kleinere Header-Icons, schlanker Look */
+    .sn-icon {
+      width: 0.9rem;
+      height: 0.9rem;
+    }
     &:hover {
       background-color: inherit;
       border-width: 1px;
     }
   }
 
-  .pt-1px {
-    padding-top: 1px;
-  }
+  .pt-1px { padding-top: 1px; }
 }
 
-:root {
-  --reach-menu-button: 1;
-}
+/* reach-ui Menüs etc. */
+:root { --reach-menu-button: 1; }
 
 reach-portal {
   @import '~@standardnotes/stylekit/src/css/utils';
@@ -99,9 +149,7 @@ reach-portal {
     @extend .m-h-32;
   }
 
-  div[data-reach-menu-item] > .sn-icon {
-    @extend .mr-2;
-  }
+  div[data-reach-menu-item] > .sn-icon { @extend .mr-2; }
 
   div[data-selected][data-reach-menu-item] {
     background-color: var(--sn-stylekit-contrast-background-color);
@@ -146,12 +194,188 @@ reach-portal {
     height: 100%;
   }
 
-  div[data-reach-alert-dialog-content] {
-    width: auto;
-  }
+  div[data-reach-alert-dialog-content] { width: auto; }
 
   fieldset {
     border: 0;
     padding-left: 0;
   }
+}
+
+/* === DARK MODE OVERRIDES (gezielt & konsistent) === */
+[data-theme='dark'] {
+  /* Grundflächen */
+  background-color: var(--sn-stylekit-background-color);
+  color: var(--sn-stylekit-foreground-color);
+}
+
+[data-theme='dark'] body {
+  background-color: var(--sn-stylekit-background-color) !important;
+  color: var(--sn-stylekit-foreground-color) !important;
+}
+
+/* Karten/Container im Editor */
+[data-theme='dark'] .task-item,
+[data-theme='dark'] .task-group,
+[data-theme='dark'] .task-list,
+[data-theme='dark'] .sn-component,
+[data-theme='dark'] .sn-editor,
+[data-theme='dark'] .sn-component-content {
+  background-color: #1e1e1f !important;
+  border-color: #2a2a2b !important;
+  color: #f5f5f5 !important;
+}
+
+/* Header der Gruppen etwas dunkler absetzen */
+[data-theme='dark'] .task-group header,
+[data-theme='dark'] .task-group .header,
+[data-theme='dark'] .task-group .flex.items-center.justify-between {
+  background: transparent !important;
+}
+
+/* Buttons/Controls – kein graues Oval; Icons neutral */
+[data-theme='dark'] .sn-component button {
+  background: transparent !important;
+  color: var(--sn-stylekit-foreground-color) !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+/* Breite Action-Buttons (z. B. unten „+“) */
+[data-theme='dark'] .sn-component .wide-button,
+[data-theme='dark'] .sn-component .sn-button,
+[data-theme='dark'] .sn-component footer button {
+  background: #2a2a2b !important;
+  color: #f5f5f5 !important;
+  border: 1px solid #3a3a3b !important;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.4) !important;
+}
+
+/* Inputs/Editorflächen: kein dunkler Kasten hinter Text */
+[data-theme='dark'] input,
+[data-theme='dark'] textarea {
+  background-color: transparent !important;
+  color: #fff !important;
+  border-color: #454547 !important;
+}
+
+/* Deutlichere sichtbare Disabled-/Completed-Farbe (weißlich) */
+[data-theme='dark'] textarea[disabled],
+[data-theme='dark'] .text-area-input.cross-out {
+  color: rgba(255,255,255,0.75) !important;
+}
+
+/* Checkbox/Accents in kräftigem Lila */
+[data-theme='dark'] input[type="checkbox"] {
+  accent-color: var(--task-accent-purple);
+}
+
+/* Kleine Check-Icons ggf. mit Filter lila einfärben (Fallback) */
+[data-theme='dark'] .sn-icon.check,
+[data-theme='dark'] .sn-icon.checkbox {
+  filter: drop-shadow(0 0 0 var(--task-accent-purple));
+}
+
+/* Prioritäts-Emojis: kein heller Hintergrund im Dark Mode */
+[data-theme='dark'] .task-item button,
+[data-theme='dark'] .task-item .priority-button,
+[data-theme='dark'] .priority-filter button {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Menü (3-Punkte) in Dark Mode */
+[data-theme='dark'] div[data-reach-menu-list] {
+  background-color: #262627 !important;
+  border: 1px solid #3a3a3b !important;
+  color: #f5f5f5 !important;
+}
+
+/* Separator-/Deko-Linien dezenter */
+[data-theme='dark'] hr,
+[data-theme='dark'] .divider,
+[data-theme='dark'] .border {
+  border-color: #333 !important;
+}
+
+/* Kreisdiagramm/Progress – Farben neutralisieren (falls sichtbar) */
+[data-theme='dark'] .circular-progress {
+  --track: #3a3a3b;
+  --progress: var(--task-accent-purple);
+}
+
+/* Kleinere Header-Buttons rechts (ohne Hintergrund) */
+[data-theme] .sn-icon-button {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Platzhaltertexte besser lesbar */
+[data-theme='dark'] ::placeholder {
+  color: rgba(255,255,255,0.55);
+}
+
+/* Fokus-Ring harmonisieren (Lila) */
+[data-theme='dark'] :focus {
+  outline-color: var(--task-accent-purple);
+}
+
+/* --- Fix: breiter "+"-Button (CreateGroup) im Dark Mode --- */
+[data-theme='dark'] button[data-testid="create-group-button"],
+[data-theme='dark'] .wide-button,
+[data-theme='dark'] .sn-component footer button {
+  background: #2a2a2b !important;
+  color: #f5f5f5 !important;
+  border: 1px solid #3a3a3b !important;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.4) !important;
+}
+
+[data-theme='dark'] button[data-testid="create-group-button"]:hover,
+[data-theme='dark'] .wide-button:hover,
+[data-theme='dark'] .sn-component footer button:hover {
+  background: #333335 !important;
+}
+
+/* --- Fix: Header-Aktionen kompakter, Icons ohne Hintergrund --- */
+.task-group .header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;            /* enger zusammen */
+}
+
+.task-group .header-actions .sn-icon-button {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  padding: 4px !important; /* kleiner */
+}
+
+/* Pfeil etwas größer darstellen */
+.task-group .header-actions .chevron-icon {
+  width: 18px !important;
+  height: 18px !important;
+}
+
+
+/* Entfernt das zusätzliche dunkle Rechteck hinter jeder Aufgabe */
+.task-item {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important; /* falls früher padding gesetzt war */
+}
+
+/* Sicherheitshalber auch im Dark Mode */
+[data-theme='dark'] .task-item {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Die Container-Liste selbst bleibt ebenfalls transparent */
+.open-tasks-container,
+.completed-tasks-container {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
 }

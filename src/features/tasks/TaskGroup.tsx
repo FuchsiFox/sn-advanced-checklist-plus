@@ -27,7 +27,7 @@ const TaskGroupContainer = styled.div<{ isLast?: boolean }>`
   border: 1px solid var(--sn-stylekit-border-color);
   border-radius: 8px;
   box-sizing: border-box;
-  padding: 16px;
+  padding: 10px 12px;
   margin-bottom: ${({ isLast }) => (!isLast ? '9px' : '0px')};
 `
 
@@ -47,7 +47,11 @@ type TaskGroupProps = {
   innerRef?: (element?: HTMLElement | null | undefined) => any
   onDragStart?: React.DragEventHandler<any>
   onTransitionEnd?: React.TransitionEventHandler<any>
+
+  /** 🔄 Wird genutzt, um Re-Render bei Prioritätswechsel zu erzwingen */
+  refreshFlag?: number
 }
+
 
 const TaskGroup: React.FC<TaskGroupProps> = ({
   group,
@@ -79,9 +83,7 @@ const TaskGroup: React.FC<TaskGroupProps> = ({
   }
 
   function handleClick() {
-    if (!collapsed) {
-      return
-    }
+    if (!collapsed) return
     setCollapsed(false)
   }
 
@@ -93,7 +95,7 @@ const TaskGroup: React.FC<TaskGroupProps> = ({
       onTransitionEnd={onTransitionEnd}
       isLast={isLast}
     >
-      <div className="flex items-center justify-between h-8 mt-1 mb-1">
+      <div className="flex items-center justify-between h-8 mt-0 mb-1">
         <div className="flex flex-grow items-center" onClick={handleClick}>
           {canEdit && (
             <div className="mr-3 pt-1px" {...props}>
@@ -106,10 +108,16 @@ const TaskGroup: React.FC<TaskGroupProps> = ({
           >
             {groupName}
           </MainTitle>
-          <CircularProgressBar size={18} percentage={percentageCompleted} />
-          <GenericInlineText data-testid="task-group-stats">
-            {completedTasks}/{totalTasks}
-          </GenericInlineText>
+
+          {/* nur anzeigen, wenn aktiviert */}
+          {group.showProgress && (
+            <>
+              <CircularProgressBar size={18} percentage={percentageCompleted} />
+              <GenericInlineText data-testid="task-group-stats">
+                {completedTasks}/{totalTasks}
+              </GenericInlineText>
+            </>
+          )}
         </div>
         {!isDragging && (
           <div className="flex items-center">
@@ -119,10 +127,7 @@ const TaskGroup: React.FC<TaskGroupProps> = ({
               </div>
             )}
             <div className="ml-3">
-              <RoundButton
-                testId="collapse-task-group"
-                onClick={handleCollapse}
-              >
+              <RoundButton testId="collapse-task-group" onClick={handleCollapse}>
                 {!collapsed ? <ChevronUpIcon /> : <ChevronDownIcon />}
               </RoundButton>
             </div>

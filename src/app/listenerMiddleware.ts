@@ -12,15 +12,13 @@ import {
   tasksGroupMerged,
   tasksReordered,
   taskToggled,
+  setPrioritiesEnabled, // 🟣 hinzufügen
+  setPriorityFilter,    // (optional, falls du Filteränderungen auch speichern willst)
 } from '../features/tasks/tasks-slice'
 
 const listenerMiddleware = createListenerMiddleware()
 
-/**
- * A list of actions that we want to listen to.
- * The groupName is obtained from the payload, and we use it to
- * dispatch the tasksGroupLastActive action.
- */
+// === 1️⃣ Gruppenaktivität verfolgen ===
 const actionsWithGroup = isAnyOf(
   taskAdded,
   taskModified,
@@ -37,9 +35,44 @@ const actionsWithGroup = isAnyOf(
 
 listenerMiddleware.startListening({
   matcher: actionsWithGroup,
-  effect: ({ payload }, listenerApi) => {
+  effect: async ({ payload }, listenerApi) => {
     const { groupName } = payload
     listenerApi.dispatch(tasksGroupLastActive({ groupName }))
+  },
+})
+
+// === 2️⃣ ALLES speichern, wenn sich etwas Relevantes ändert ===
+listenerMiddleware.startListening({
+  matcher: isAnyOf(
+    taskAdded,
+    taskModified,
+    taskDeleted,
+    taskToggled,
+    openAllCompleted,
+    deleteAllCompleted,
+    tasksReordered,
+    tasksGroupAdded,
+    tasksGroupDeleted,
+    tasksGroupMerged,
+    tasksGroupCollapsed,
+    setPrioritiesEnabled, // 🟣 unser Toggle
+    setPriorityFilter      // optional: Filterwechsel speichern
+  ),
+  effect: async (_, listenerApi) => {
+    try {
+      const state = listenerApi.getState() as any
+      const note = (window as any).note
+      const editorKit = (window as any).editorKit
+      if (!note || !editorKit) return
+
+      note.content.text = JSON.stringify(state.tasks, null, 2)
+      // ✨ EditorKit benachrichtigen, damit SN speichert:
+      if (editorKit.onNoteValueChange) {
+        editorKit.onNoteValueChange(note)
+      }
+    } catch (error) {
+      console.warn('⚠️ Could not persist note:', error)
+    }
   },
 })
 

@@ -5,18 +5,7 @@ import {
   parseMarkdownTasks,
 } from '../../common/utils'
 
-export type TasksState = {
-  schemaVersion: string
-  groups: GroupPayload[]
-  initialized?: boolean
-  legacyContent?: GroupPayload
-  lastError?: string
-}
-
-const initialState: TasksState = {
-  schemaVersion: '1.0.0',
-  groups: [],
-}
+export type Priority = 'none' | 'low' | 'medium' | 'high'
 
 export type TaskPayload = {
   id: string
@@ -25,6 +14,7 @@ export type TaskPayload = {
   createdAt: Date
   updatedAt?: Date
   completedAt?: Date
+  priority?: Priority
 }
 
 export type GroupPayload = {
@@ -32,75 +22,130 @@ export type GroupPayload = {
   collapsed?: boolean
   draft?: string
   lastActive?: Date
+  hideCompleted?: boolean
+  /** ⬇ Show Progress existiert bereits (sichtbar im UI-Menü) */
+  showProgress?: boolean
   tasks: TaskPayload[]
+}
+
+
+export type TasksState = {
+  schemaVersion: string
+  groups: GroupPayload[]
+  initialized?: boolean
+  legacyContent?: GroupPayload
+  lastError?: string
+  priorityFilter?: 'all' | 'low' | 'medium' | 'high'
+  prioritiesEnabled?: boolean
+  theme?: 'light' | 'dark'  // ← NEU (optional, damit Tests nicht brechen)
+}
+
+
+const initialState: TasksState = {
+  schemaVersion: '1.0.0',
+  groups: [],
+  priorityFilter: 'all',
+  prioritiesEnabled: true,
 }
 
 const tasksSlice = createSlice({
   name: 'tasks',
   initialState,
   reducers: {
+    tasksGroupProgressToggled(
+      state,
+      action: PayloadAction<{ groupName: string; show: boolean }>
+      ) {
+          const { groupName, show } = action.payload
+          const group = state.groups.find((g) => g.name === groupName)
+          if (group) {
+            group.showProgress = show
+          }
+        },
+
+    setTheme(state, action: PayloadAction<'light' | 'dark'>) {
+      state.theme = action.payload
+    },
+
+    
+    /** 🔧 Globaler Toggle */
+    setPrioritiesEnabled(state, action: PayloadAction<boolean>) {
+      state.prioritiesEnabled = action.payload
+      // Wenn ausgeschaltet, Filter neutralisieren
+      if (!state.prioritiesEnabled) {
+        state.priorityFilter = 'all'
+      }
+    },
+
+    setPriorityFilter(state, action: PayloadAction<'all' | 'low' | 'medium' | 'high'>) {
+      state.priorityFilter = action.payload
+    },
+
+    /** 🔽 Per-Gruppe: erledigte aus/einblenden */
+    tasksGroupHideCompletedToggled(
+      state,
+      action: PayloadAction<{ groupName: string; hide: boolean }>
+    ) {
+      const { groupName, hide } = action.payload
+      const group = state.groups.find((g) => g.name === groupName)
+      if (group) {
+        group.hideCompleted = hide
+      }
+    },
+
     taskAdded(
       state,
       action: PayloadAction<{
-        task: { id: string; description: string }
+        task: { id: string; description: string; priority?: Priority }
         groupName: string
       }>
     ) {
       const { groupName, task } = action.payload
       const group = state.groups.find((item) => item.name === groupName)
-      if (!group) {
-        return
-      }
+      if (!group) return
       delete group.draft
+
+      if (!task.priority) task.priority = 'none'
+
       group.tasks.unshift({
         ...task,
         completed: false,
         createdAt: new Date(),
       })
     },
+
     taskModified(
       state,
       action: PayloadAction<{
-        task: { id: string; description: string }
+        task: { id: string; description?: string; priority?: Priority }
         groupName: string
       }>
     ) {
       const { groupName, task } = action.payload
       const group = state.groups.find((item) => item.name === groupName)
-      if (!group) {
-        return
-      }
+      if (!group) return
       const currentTask = group.tasks.find((item) => item.id === task.id)
-      if (!currentTask) {
-        return
-      }
-      currentTask.description = task.description
+      if (!currentTask) return
+
+      if (typeof task.description !== 'undefined') currentTask.description = task.description
+      if (typeof task.priority !== 'undefined') currentTask.priority = task.priority
       currentTask.updatedAt = new Date()
     },
-    taskDeleted(
-      state,
-      action: PayloadAction<{ id: string; groupName: string }>
-    ) {
+
+    taskDeleted(state, action: PayloadAction<{ id: string; groupName: string }>) {
       const { id, groupName } = action.payload
       const group = state.groups.find((item) => item.name === groupName)
-      if (!group) {
-        return
-      }
+      if (!group) return
       group.tasks = group.tasks.filter((task) => task.id !== id)
     },
-    taskToggled(
-      state,
-      action: PayloadAction<{ id: string; groupName: string }>
-    ) {
+
+    taskToggled(state, action: PayloadAction<{ id: string; groupName: string }>) {
       const { id, groupName } = action.payload
       const group = state.groups.find((item) => item.name === groupName)
-      if (!group) {
-        return
-      }
+      if (!group) return
       const currentTask = group.tasks.find((task) => task.id === id)
-      if (!currentTask) {
-        return
-      }
+      if (!currentTask) return
+
       currentTask.completed = !currentTask.completed
       currentTask.updatedAt = new Date()
       if (currentTask.completed) {
@@ -108,31 +153,29 @@ const tasksSlice = createSlice({
       } else {
         delete currentTask.completedAt
       }
-      /**
-       * Puts the recently toggled task on top
-       */
+
+      // zuletzt geänderte nach oben
       const tasks = group.tasks.filter((task) => task.id !== id)
       group.tasks = [currentTask, ...tasks]
     },
+
     openAllCompleted(state, action: PayloadAction<{ groupName: string }>) {
       const { groupName } = action.payload
       const group = state.groups.find((item) => item.name === groupName)
-      if (!group) {
-        return
-      }
+      if (!group) return
       group.tasks.forEach((task) => {
         task.completed = false
         delete task.completedAt
       })
     },
+
     deleteAllCompleted(state, action: PayloadAction<{ groupName: string }>) {
       const { groupName } = action.payload
       const group = state.groups.find((item) => item.name === groupName)
-      if (!group) {
-        return
-      }
+      if (!group) return
       group.tasks = group.tasks.filter((task) => task.completed === false)
     },
+
     tasksReordered(
       state,
       action: PayloadAction<{
@@ -142,60 +185,37 @@ const tasksSlice = createSlice({
         isSameSection: boolean
       }>
     ) {
-      const { groupName, swapTaskIndex, withTaskIndex, isSameSection } =
-        action.payload
-      if (!isSameSection) {
-        return
-      }
+      const { groupName, swapTaskIndex, withTaskIndex, isSameSection } = action.payload
+      if (!isSameSection) return
       const group = state.groups.find((item) => item.name === groupName)
-      if (!group) {
-        return
-      }
-      group.tasks = arrayMoveImmutable(
-        group.tasks,
-        swapTaskIndex,
-        withTaskIndex
-      )
+      if (!group) return
+      group.tasks = arrayMoveImmutable(group.tasks, swapTaskIndex, withTaskIndex)
     },
-    tasksGroupAdded(
-      state,
-      action: PayloadAction<{
-        groupName: string
-      }>
-    ) {
+
+    tasksGroupAdded(state, action: PayloadAction<{ groupName: string }>) {
       const { groupName } = action.payload
       const group = state.groups.find((item) => item.name === groupName)
-      if (group) {
-        return
-      }
+      if (group) return
       state.groups.push({
         name: groupName,
         tasks: [],
+        hideCompleted: true, // 👈 default: erledigte einklappen
       })
     },
+
     tasksGroupReordered(
       state,
-      action: PayloadAction<{
-        swapGroupIndex: number
-        withGroupIndex: number
-      }>
+      action: PayloadAction<{ swapGroupIndex: number; withGroupIndex: number }>
     ) {
       const { swapGroupIndex, withGroupIndex } = action.payload
-      state.groups = arrayMoveImmutable(
-        state.groups,
-        swapGroupIndex,
-        withGroupIndex
-      )
+      state.groups = arrayMoveImmutable(state.groups, swapGroupIndex, withGroupIndex)
     },
-    tasksGroupDeleted(
-      state,
-      action: PayloadAction<{
-        groupName: string
-      }>
-    ) {
+
+    tasksGroupDeleted(state, action: PayloadAction<{ groupName: string }>) {
       const { groupName } = action.payload
       state.groups = state.groups.filter((item) => item.name !== groupName)
     },
+
     tasksGroupMerged(
       state,
       action: PayloadAction<{
@@ -204,21 +224,17 @@ const tasksSlice = createSlice({
       }>
     ) {
       const { groupName, mergeWith } = action.payload
-      if (groupName === mergeWith) {
-        return
-      }
+      if (groupName === mergeWith) return
       const groupA = state.groups.find((item) => item.name === groupName)
-      if (!groupA) {
-        return
-      }
+      if (!groupA) return
       const groupB = state.groups.find((item) => item.name === mergeWith)
-      if (!groupB) {
-        return
-      }
+      if (!groupB) return
+
       groupA.name = mergeWith
       groupA.tasks = [...(groupB.tasks ?? []), ...groupA.tasks]
       state.groups = state.groups.filter((group) => group !== groupB)
     },
+
     tasksGroupRenamed(
       state,
       action: PayloadAction<{
@@ -227,63 +243,41 @@ const tasksSlice = createSlice({
       }>
     ) {
       const { groupName, newName } = action.payload
-      if (groupName === newName) {
-        return
-      }
+      if (groupName === newName) return
       const groupA = state.groups.find((item) => item.name === groupName)
-      if (!groupA) {
-        return
-      }
+      if (!groupA) return
       groupA.name = newName
     },
+
     tasksGroupCollapsed(
       state,
-      action: PayloadAction<{
-        groupName: string
-        collapsed: boolean
-      }>
+      action: PayloadAction<{ groupName: string; collapsed: boolean }>
     ) {
       const { groupName, collapsed } = action.payload
       const group = state.groups.find((item) => item.name === groupName)
-      if (!group) {
-        return
-      }
+      if (!group) return
       group.collapsed = collapsed
     },
+
     tasksGroupDraft(
       state,
-      action: PayloadAction<{
-        groupName: string
-        draft: string
-      }>
+      action: PayloadAction<{ groupName: string; draft: string }>
     ) {
       const { groupName, draft } = action.payload
       const group = state.groups.find((item) => item.name === groupName)
-      if (!group) {
-        return
-      }
+      if (!group) return
       group.draft = draft
     },
-    tasksGroupLastActive(
-      state,
-      action: PayloadAction<{
-        groupName: string
-      }>
-    ) {
+
+    tasksGroupLastActive(state, action: PayloadAction<{ groupName: string }>) {
       const { groupName } = action.payload
       const group = state.groups.find((item) => item.name === groupName)
-      if (!group) {
-        return
-      }
+      if (!group) return
       group.lastActive = new Date()
     },
-    tasksLegacyContentMigrated(
-      state,
-      { payload }: PayloadAction<{ continue: boolean }>
-    ) {
-      if (!state.legacyContent) {
-        return
-      }
+
+    tasksLegacyContentMigrated(state, { payload }: PayloadAction<{ continue: boolean }>) {
+      if (!state.legacyContent) return
 
       if (payload.continue) {
         state.initialized = true
@@ -299,6 +293,7 @@ const tasksSlice = createSlice({
 
       delete state.legacyContent
     },
+
     tasksLoaded(state, { payload }: PayloadAction<string>) {
       if (!payload && !state.initialized) {
         payload = '{}'
@@ -315,28 +310,43 @@ const tasksSlice = createSlice({
           }
         }
 
-        const parsedState = JSON.parse(payload) as TasksState
-        const newState: TasksState = {
-          schemaVersion: parsedState.schemaVersion ?? '1.0.0',
-          groups: parsedState.groups ?? [],
-        }
+        const parsedState = JSON.parse(payload) as Partial<TasksState>
+const newState: TasksState = {
+  schemaVersion: parsedState.schemaVersion ?? '1.0.0',
+  groups: parsedState.groups ?? [],
+  priorityFilter: parsedState.priorityFilter ?? 'all',
+  prioritiesEnabled: parsedState.prioritiesEnabled ?? true,
+  theme: parsedState.theme ?? state.theme,   // ← NEU
+  initialized: true,
+}
 
-        if (newState !== initialState) {
-          state.schemaVersion = newState.schemaVersion
-          state.groups = newState.groups
-          state.initialized = true
-          delete state.lastError
-        }
-      } catch (error: any) {
-        state.initialized = false
-        state.lastError = `An error has occurred while parsing the note's content: ${error}`
-        return
-      }
+        // fehlende Defaults in Gruppen nachziehen
+        newState.groups = newState.groups.map((g) => ({
+          hideCompleted: g.hideCompleted ?? true,
+          ...g,
+        }))
+
+        state.schemaVersion = newState.schemaVersion
+    state.groups = newState.groups
+    state.priorityFilter = newState.priorityFilter
+    state.prioritiesEnabled = newState.prioritiesEnabled
+    state.theme = newState.theme // ← NEU
+    state.initialized = true
+    delete state.lastError
+  } catch (error: any) {
+    state.initialized = false
+    state.lastError = `An error has occurred while parsing the note's content: ${error}`
+    return
+  }
     },
   },
 })
 
 export const {
+  setPrioritiesEnabled,
+  setPriorityFilter,
+  tasksGroupHideCompletedToggled,
+
   taskAdded,
   taskModified,
   taskToggled,
@@ -354,5 +364,8 @@ export const {
   tasksGroupCollapsed,
   tasksGroupDraft,
   tasksGroupLastActive,
+  tasksGroupProgressToggled,
+  setTheme,
 } = tasksSlice.actions
+
 export default tasksSlice.reducer

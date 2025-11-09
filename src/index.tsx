@@ -24,6 +24,13 @@ import TaskGroupList from './features/tasks/TaskGroupList'
 import { getPlainPreview } from './common/utils'
 import { CheckBoxElementsDefs } from './common/components/svg'
 
+declare global {
+  interface Window {
+    note?: any
+  }
+}
+
+
 const MainContainer = styled.div`
   margin: 16px;
   padding-bottom: 60px;
@@ -68,9 +75,13 @@ const TaskEditor: React.FC = () => {
       },
       onNoteValueChange: async (currentNote: any) => {
         note.current = currentNote
+        ;(window as any).note = currentNote
+
+        window.note = currentNote // <--- hinzufügen, um Zugriff aus anderen Komponenten zu erlauben
+
 
         const editable =
-          !currentNote.content.appData['org.standardnotes.sn'].locked ?? true
+          !(currentNote?.content?.appData?.['org.standardnotes.sn']?.locked ?? false)
         const spellCheckEnabled = currentNote.content.spellcheck
 
         dispatch(setCanEdit(editable))
@@ -86,6 +97,10 @@ const TaskEditor: React.FC = () => {
       mode: 'json',
       supportsFileSafe: false,
     })
+
+    
+    ;(window as any).editorKit = editorKit.current
+
   }, [dispatch])
 
   useEffect(() => {
@@ -93,31 +108,44 @@ const TaskEditor: React.FC = () => {
   }, [configureEditorKit])
 
   const saveNote = useCallback(() => {
-    const { initialized } = store.getState().tasks
-    const currentNote = note.current
-    if (!currentNote || !initialized) {
-      return
-    }
+  const { initialized } = store.getState().tasks
+  const currentNote = note.current
+  if (!currentNote || !initialized) return
 
-    const canEdit = store.getState().settings.canEdit
-    if (!canEdit) {
-      return
-    }
+  const canEdit = store.getState().settings.canEdit
+  if (!canEdit) return
 
-    editorKit.current!.saveItemWithPresave(currentNote, () => {
-      const { schemaVersion, groups } = store.getState().tasks
-      currentNote.content.text = JSON.stringify(
-        { schemaVersion, groups },
-        null,
-        2
-      )
+  editorKit.current!.saveItemWithPresave(currentNote, () => {
+    // 👇 NUR über store.getState() lesen – keine Hooks hier!
+    const {
+      schemaVersion,
+      groups,
+      priorityFilter,
+      prioritiesEnabled,
+      theme, // falls bereits im Slice vorhanden
+    } = store.getState().tasks
 
-      currentNote.content.preview_plain = getPlainPreview(groups)
-      currentNote.content.preview_html = renderToString(
-        <NotePreview groupedTasks={groups} />
-      )
-    })
-  }, [])
+    // Textinhalt speichern (inkl. Prioritäten/Filter/Theme, damit es persistiert)
+    currentNote.content.text = JSON.stringify(
+      {
+        schemaVersion,
+        groups,
+        prioritiesEnabled,
+        priorityFilter,
+        theme, // falls vorhanden
+      },
+      null,
+      2
+    )
+
+    // Previews aktualisieren
+    currentNote.content.preview_plain = getPlainPreview(groups)
+    currentNote.content.preview_html = renderToString(
+      <NotePreview groupedTasks={groups} />
+    )
+  })
+}, [])
+
 
   useEffect(() => {
     const unsubscribe = store.subscribe(() => initialized && saveNote())
