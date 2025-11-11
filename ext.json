@@ -1,0 +1,10 @@
+{
+  "identifier": "adhs.advanced-checklist-plus",
+  "name": "Advanced Checklist Plus",
+  "content_type": "SN|Component",
+  "area": "editor-editor",
+  "version": "1.0.0",
+  "description": "Enhanced checklist with priorities, hide completed, drag & drop, and dark mode.",
+  "url": "http://localhost:3000",
+  "download_url": "http://localhost:3000"
+}
