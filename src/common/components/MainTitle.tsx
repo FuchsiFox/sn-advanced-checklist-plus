@@ -1,7 +1,10 @@
+import React from 'react'
 import styled from 'styled-components'
 
 type Header1Props = {
   crossed: boolean
+  className?: string
+  children?: React.ReactNode
 }
 
 const Header1 = styled.h1<Header1Props>`
@@ -15,6 +18,7 @@ const Header1 = styled.h1<Header1Props>`
 type MainTitleProps = {
   highlight?: boolean
   crossed?: boolean
+  children?: React.ReactNode
 }
 
 export const MainTitle: React.FC<MainTitleProps> = ({

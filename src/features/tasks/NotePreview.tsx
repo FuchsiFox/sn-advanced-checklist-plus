@@ -5,11 +5,16 @@ import {
   truncateText,
 } from '../../common/utils'
 import { GroupPayload, TaskPayload } from './tasks-slice'
+import React from 'react'
 
 const GROUPS_PREVIEW_LIMIT = 3
 const MAX_GROUP_DESCRIPTION_LENGTH = 30
 
-const Title: React.FC = ({ children }) => {
+type TitleProps = {
+  children?: React.ReactNode
+}
+
+const Title: React.FC<TitleProps> = ({ children }) => {
   return <p className="ml-2 w-full font-medium">{children}</p>
 }
 

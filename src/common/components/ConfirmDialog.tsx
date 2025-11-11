@@ -14,9 +14,10 @@ type ConfirmDialogProps = {
   title?: string
   confirmButtonText?: string
   confirmButtonStyle?: 'danger' | 'info'
-  confirmButtonCb: () => void
+  confirmButtonCb?: () => void
   cancelButtonText?: string
-  cancelButtonCb: () => void
+  cancelButtonCb?: () => void
+  children?: React.ReactNode
 }
 
 export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({

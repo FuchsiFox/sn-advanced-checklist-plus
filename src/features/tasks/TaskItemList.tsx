@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { DragDropContext, DropResult } from 'react-beautiful-dnd'
+import { DragDropContext, DropResult } from '@hello-pangea/dnd'
 import styled from 'styled-components'
 
 import { useAppDispatch, useAppSelector } from '../../app/hooks'

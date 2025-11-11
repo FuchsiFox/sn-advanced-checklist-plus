@@ -44,14 +44,13 @@ type TaskGroupProps = {
   isDragging: boolean
   isLast?: boolean
   style?: React.CSSProperties
-  innerRef?: (element?: HTMLElement | null | undefined) => any
+  innerRef?: (element?: HTMLElement | null) => any
   onDragStart?: React.DragEventHandler<any>
   onTransitionEnd?: React.TransitionEventHandler<any>
 
   /** 🔄 Wird genutzt, um Re-Render bei Prioritätswechsel zu erzwingen */
   refreshFlag?: number
 }
-
 
 const TaskGroup: React.FC<TaskGroupProps> = ({
   group,
@@ -127,7 +126,10 @@ const TaskGroup: React.FC<TaskGroupProps> = ({
               </div>
             )}
             <div className="ml-3">
-              <RoundButton testId="collapse-task-group" onClick={handleCollapse}>
+              <RoundButton
+                testId="collapse-task-group"
+                onClick={handleCollapse}
+              >
                 {!collapsed ? <ChevronUpIcon /> : <ChevronDownIcon />}
               </RoundButton>
             </div>

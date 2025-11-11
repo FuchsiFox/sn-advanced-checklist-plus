@@ -1,15 +1,30 @@
 import './TaskItem.scss'
-import { useState, ChangeEvent, createRef, KeyboardEvent, useEffect } from 'react'
+import {
+  useState,
+  ChangeEvent,
+  createRef,
+  KeyboardEvent,
+  useEffect,
+} from 'react'
 import styled from 'styled-components'
 import { useAppDispatch, useAppSelector, useDidMount } from '../../app/hooks'
-import { taskDeleted, taskModified, TaskPayload, taskToggled } from './tasks-slice'
+import {
+  taskDeleted,
+  taskModified,
+  TaskPayload,
+  taskToggled,
+} from './tasks-slice'
 import { TextAreaInput } from '../../common/components'
 import { Priority } from './tasks-slice'
 
 const DISPATCH_OPENED_DELAY_MS = 300
 const DISPATCH_COMPLETED_DELAY_MS = 300
 
-const Container = styled.div<{ completed?: boolean; priority?: string; $colored?: boolean }>`
+const Container = styled.div<{
+  completed?: boolean
+  priority?: string
+  $colored?: boolean
+}>`
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -55,14 +70,16 @@ const Container = styled.div<{ completed?: boolean; priority?: string; $colored?
 export type TaskItemProps = {
   task: TaskPayload
   groupName: string
-  innerRef?: (element?: HTMLElement | null | undefined) => any
+  innerRef?: (element?: HTMLElement | null) => any
 }
 
 const TaskItem: React.FC<TaskItemProps> = ({ task, groupName, innerRef }) => {
   const textAreaRef = createRef<HTMLTextAreaElement>()
   const dispatch = useAppDispatch()
   const canEdit = useAppSelector((state) => state.settings.canEdit)
-  const spellCheckEnabled = useAppSelector((state) => state.settings.spellCheckerEnabled)
+  const spellCheckEnabled = useAppSelector(
+    (state) => state.settings.spellCheckerEnabled
+  )
   const prioritiesEnabled = useAppSelector((s) => s.tasks.prioritiesEnabled)
 
   const [completed, setCompleted] = useState(!!task.completed)
@@ -81,7 +98,9 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, groupName, innerRef }) => {
   function onCheckBoxToggle() {
     const newState = !completed
     setCompleted(newState)
-    const delay = newState ? DISPATCH_COMPLETED_DELAY_MS : DISPATCH_OPENED_DELAY_MS
+    const delay = newState
+      ? DISPATCH_COMPLETED_DELAY_MS
+      : DISPATCH_OPENED_DELAY_MS
     setTimeout(() => {
       dispatch(taskToggled({ id: task.id, groupName }))
     }, delay)
@@ -108,7 +127,9 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, groupName, innerRef }) => {
   useDidMount(() => {
     const timeoutId = setTimeout(() => {
       if (description !== task.description) {
-        dispatch(taskModified({ task: { id: task.id, description }, groupName }))
+        dispatch(
+          taskModified({ task: { id: task.id, description }, groupName })
+        )
       }
     }, 500)
     return () => clearTimeout(timeoutId)
@@ -131,7 +152,9 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, groupName, innerRef }) => {
           gap: 6,
           minWidth: 18,
         }}
-        title={completed ? 'Als unerledigt markieren' : 'Als erledigt markieren'}
+        title={
+          completed ? 'Als unerledigt markieren' : 'Als erledigt markieren'
+        }
       >
         {/* das eigentliche Input bleibt – ist aber unsichtbar, damit beim „✓ only“ der Klick trotzdem funktioniert */}
         <input
@@ -216,8 +239,13 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, groupName, innerRef }) => {
           onClick={() => {
             const priorities: Priority[] = ['none', 'low', 'medium', 'high']
             const next =
-              priorities[(priorities.indexOf(task.priority || 'none') + 1) % priorities.length]
-            dispatch(taskModified({ task: { ...task, priority: next }, groupName }))
+              priorities[
+                (priorities.indexOf(task.priority || 'none') + 1) %
+                  priorities.length
+              ]
+            dispatch(
+              taskModified({ task: { ...task, priority: next }, groupName })
+            )
           }}
           title="Priorität ändern"
         >

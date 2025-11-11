@@ -6,7 +6,7 @@ import {
   DraggingStyle,
   Droppable,
   NotDraggingStyle,
-} from 'react-beautiful-dnd'
+} from '@hello-pangea/dnd'
 import styled from 'styled-components'
 import { CSSTransition, TransitionGroup } from 'react-transition-group'
 
@@ -57,6 +57,7 @@ type TasksContainerProps = {
   tasks: TaskPayload[]
   type: ContainerType
   testId?: string
+  children?: React.ReactNode
 }
 
 const TasksContainer: React.FC<TasksContainerProps> = ({
@@ -79,7 +80,11 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
       : tasks.filter((t) => t.priority === priorityFilter)
 
   return (
-    <OuterContainer data-testid={testId} type={type} items={visibleTasks.length}>
+    <OuterContainer
+      data-testid={testId}
+      type={type}
+      items={visibleTasks.length}
+    >
       <Droppable droppableId={droppableId} isDropDisabled={!canEdit}>
         {(provided) => (
           <Wrapper>
@@ -132,23 +137,26 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
                       index={index}
                       isDragDisabled={!canEdit}
                     >
-                      {(
-                        { innerRef, draggableProps, dragHandleProps },
-                        { isDragging }
-                      ) => {
-                        const { style, ...restDraggableProps } = draggableProps
+                      {(dragProvided, dragSnapshot) => {
+                        const { style, ...restDraggableProps } =
+                          dragProvided.draggableProps
+
+                        // Ref-Signatur tolerant weiterreichen
+                        const passThroughInnerRef = (el?: HTMLElement | null) =>
+                          dragProvided.innerRef(el ?? null)
+
                         return (
                           <div
                             className="task-item"
-                            style={getItemStyle(isDragging, style)}
+                            style={getItemStyle(dragSnapshot.isDragging, style)}
                             {...restDraggableProps}
                           >
                             <TaskItem
                               key={`task-item-${task.id}`}
                               task={task}
                               groupName={groupName}
-                              innerRef={innerRef}
-                              {...dragHandleProps}
+                              innerRef={passThroughInnerRef}
+                              {...dragProvided.dragHandleProps}
                             />
                           </div>
                         )

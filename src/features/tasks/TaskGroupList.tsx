@@ -4,7 +4,7 @@ import {
   Draggable,
   Droppable,
   DropResult,
-} from 'react-beautiful-dnd'
+} from '@hello-pangea/dnd'
 
 import { useAppDispatch, useAppSelector } from '../../app/hooks'
 import {
@@ -32,11 +32,15 @@ const PriorityFilter: React.FC = () => {
       window.matchMedia('(prefers-color-scheme: dark)').matches,
     []
   )
-  const theme: 'light' | 'dark' = themeFromStore ?? (systemPrefersDark ? 'dark' : 'light')
+  const theme: 'light' | 'dark' =
+    themeFromStore ?? (systemPrefersDark ? 'dark' : 'light')
 
   // Wende Theme auf <html data-theme="..."> an
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme === 'dark' ? 'dark' : 'light')
+    document.documentElement.setAttribute(
+      'data-theme',
+      theme === 'dark' ? 'dark' : 'light'
+    )
   }, [theme])
 
   type PriorityValue = 'low' | 'medium' | 'high' | 'all'
@@ -46,11 +50,14 @@ const PriorityFilter: React.FC = () => {
     { value: 'high', label: '🔴' },
   ]
 
-  const allTasks = useAppSelector((state) => state.tasks.groups.flatMap((g) => g.tasks))
+  const allTasks = useAppSelector((state) =>
+    state.tasks.groups.flatMap((g) => g.tasks)
+  )
 
   const priorityCounts = {
     low: allTasks.filter((t) => !t.completed && t.priority === 'low').length,
-    medium: allTasks.filter((t) => !t.completed && t.priority === 'medium').length,
+    medium: allTasks.filter((t) => !t.completed && t.priority === 'medium')
+      .length,
     high: allTasks.filter((t) => !t.completed && t.priority === 'high').length,
   }
 
@@ -81,10 +88,14 @@ const PriorityFilter: React.FC = () => {
           opacity: 0.85,
           transition: 'opacity .2s ease',
         }}
-        title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+        title={
+          theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'
+        }
       >
         <span style={{ fontSize: 14 }}>{theme === 'dark' ? '🌙' : '☀️'}</span>
-        <span style={{ fontWeight: 500 }}>{theme === 'dark' ? 'Dark' : 'Light'}</span>
+        <span style={{ fontWeight: 500 }}>
+          {theme === 'dark' ? 'Dark' : 'Light'}
+        </span>
       </button>
 
       {/* ⚙️ Prioritäten aktiv/deaktivieren */}
@@ -165,7 +176,9 @@ const TaskGroupList: React.FC = () => {
   const dispatch = useAppDispatch()
   const canEdit = useAppSelector((state) => state.settings.canEdit)
   const groupedTasks = useAppSelector((state) => state.tasks.groups)
-  const prioritiesEnabled = useAppSelector((state) => state.tasks.prioritiesEnabled)
+  const prioritiesEnabled = useAppSelector(
+    (state) => state.tasks.prioritiesEnabled
+  )
 
   // Wenn Prioritäten-Toggle wechselt, zwingen wir Child-Komponenten zu einem Re-Render
   const [refreshFlag, setRefreshFlag] = useState(0)
@@ -190,9 +203,16 @@ const TaskGroupList: React.FC = () => {
     <>
       <PriorityFilter />
       <DragDropContext data-testid="task-group-list" onDragEnd={onDragEnd}>
-        <Droppable droppableId="droppable-task-group-list" isDropDisabled={!canEdit}>
+        <Droppable
+          droppableId="droppable-task-group-list"
+          isDropDisabled={!canEdit}
+        >
           {(provided) => (
-            <div {...provided.droppableProps} ref={provided.innerRef}>
+            <div
+              {...provided.droppableProps}
+              ref={provided.innerRef}
+              data-testid="task-group-list"
+            >
               {groupedTasks.map((group, index) => (
                 <Draggable
                   key={`draggable-${group.name}`}
@@ -200,19 +220,26 @@ const TaskGroupList: React.FC = () => {
                   index={index}
                   isDragDisabled={!canEdit}
                 >
-                  {({ innerRef, draggableProps, dragHandleProps }, { isDragging }) => {
-                    const { onTransitionEnd, ...restDraggableProps } = draggableProps
+                  {(dragProvided, dragSnapshot) => {
+                    // onTransitionEnd rausziehen wie gehabt
+                    const { onTransitionEnd, ...restDraggableProps } =
+                      dragProvided.draggableProps
+
+                    // innerRef kompatibel machen (tolerantere Signatur)
+                    const passThroughInnerRef = (el?: HTMLElement | null) =>
+                      dragProvided.innerRef(el ?? null)
+
                     return (
                       <TaskGroup
                         key={`group-${group.name}`}
                         group={group}
-                        isDragging={isDragging}
-                        innerRef={innerRef}
+                        isDragging={dragSnapshot.isDragging}
+                        innerRef={passThroughInnerRef}
                         onTransitionEnd={onTransitionEnd}
-                        onDragStart={dragHandleProps?.onDragStart}
+                        onDragStart={dragProvided.dragHandleProps?.onDragStart}
                         isLast={groupedTasks.length - 1 === index}
                         refreshFlag={refreshFlag}
-                        {...dragHandleProps}
+                        {...dragProvided.dragHandleProps}
                         {...restDraggableProps}
                       />
                     )
