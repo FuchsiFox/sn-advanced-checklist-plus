@@ -1,6 +1,6 @@
 {
   "name": "@standardnotes/advanced-checklist-plus",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "A task editor with grouping functionality.",
   "keywords": [
     "Standard Notes",
@@ -13,17 +13,17 @@
   "license": "AGPL-3.0-or-later",
   "repository": {
     "type": "git",
-    "url": "https://github.com/standardnotes/advanced-checklist.git"
+    "url": "https://github.com/FuchsiFox/sn-advanced-checklist-plus.git"
   },
   "bugs": {
-    "url": "https://github.com/standardnotes/advanced-checklist/issues"
+    "url": "https://github.com/FuchsiFox/sn-advanced-checklist-plus/issues"
   },
   "sn": {
     "main": "build/index.html"
   },
   "homepage": ".",
   "scripts": {
-    "analyze": "source-map-explorer 'build/static/js/*.js'",
+    "analyze": "source-map-explorer \"build/static/js/*.js\"",
     "start": "craco start",
     "build": "craco build",
     "prepublishOnly": "npm run build",
@@ -39,7 +39,7 @@
     "server-public": "http-server -p 3000 --cors",
     "server-root": "http-server ./ -p 3000 --cors",
     "server": "http-server ./build -p 3000 --cors",
-    "pretty": "prettier --write 'src/**/*.{html,css,scss,js,jsx,ts,tsx,json}' README.md",
+    "pretty": "prettier --write \"src/**/*.{html,css,scss,js,jsx,ts,tsx,json}\" README.md",
     "prepare": "husky install"
   },
   "eslintConfig": {
