@@ -3,9 +3,8 @@
   "name": "Advanced Checklist Plus",
   "content_type": "SN|Component",
   "area": "editor-editor",
-  "version": "1.0.6",
+  "version": "1.1.0",
   "description": "Enhanced checklist with priorities, hide completed, drag & drop, and dark mode.",
   "url": "https://fuchsifox.github.io/sn-advanced-checklist-plus/index.html",
-  "download_url": "https://fuchsifox.github.io/sn-advanced-checklist-plus/index.html",
-  "mobile": true
+  "download_url": "https://fuchsifox.github.io/sn-advanced-checklist-plus/index.html"
 }
